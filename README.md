@@ -8,7 +8,7 @@ The goal is to build a **smart contract system** that enables **community-driven
 
 ## Core Requirements
 
-### 1. Token Launch Submission
+### A. Token Launch Submission
 
 Curators must evaluate and vote on submitted token launches. Submissions should include:
 
@@ -16,7 +16,7 @@ Curators must evaluate and vote on submitted token launches. Submissions should 
 2. **Amount of New Token To be Distributed**: The amount of **New Tokens** that will be distributed if the curation is successful.  
 3. **Target Amount of CurationTokens**: The amount of **CurationTokens** needed to have a successful curation.
 
-### 2. Curation Mechanism
+### B. Curation Mechanism
 
 #### Stake Tokens
 - Participants must stake **CurationToken** (an existing ERC20 token) to curate token launches.
@@ -27,19 +27,6 @@ Curators must evaluate and vote on submitted token launches. Submissions should 
 #### Successful Curation
 - If enough tokens are staked, the curation is considered a success.
 - The **CurationTokens** are **burnt**, and participants can claim their share of **New Tokens**.
-
-### 3. Deliverables
-
-1. **Smart Contract Code**  
-   - Staking mechanism  
-   - Unstaking mechanism  
-   - Claiming mechanism  
-   - Security best practices  
-
-2. **Documentation**  
-   - Technical documentation of the system explaining design choices  
-   - User guide for curators and token submitters  
-
 
 
 ## Optional / Advanced Requirements
