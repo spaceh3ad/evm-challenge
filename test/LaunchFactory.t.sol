@@ -29,11 +29,11 @@ contract LaunchFactoryTest is Fixture {
         upgradeFactory(_proxy, _newImplementationContractName, _data);
 
         vm.startPrank(deployer);
-        address _curation = createSubmission(deployer);
+        (address curationInstance, ) = createSubmission(deployer);
         vm.stopPrank();
 
         LaunchFactoryV2(_proxy).curations(0);
-        assertEq(LaunchFactoryV2(_proxy).curations(0), _curation);
+        assertEq(LaunchFactoryV2(_proxy).curations(0), curationInstance);
     }
 
     function test_upgradeCurationImplementation() public {
