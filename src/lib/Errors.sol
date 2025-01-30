@@ -7,4 +7,4 @@ error TokenLauncher__CurationInitFailed();
 
 // Curation Errors
 error Curation__InsufficientBalance();
-error Curation__CurationEnded();
+error Curation__InvalidStatus();

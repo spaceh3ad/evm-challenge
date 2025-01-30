@@ -74,7 +74,7 @@ contract Curation is Initializable {
         curationDetails.curationToken.safeTransfer(msg.sender, amount);
     }
 
-    function claim() public isActive(CurationStatus.ENDED) {
+    function claim() public validateStatus(CurationStatus.ENDED) {
         require(stakedAmounts[msg.sender] > 0, Curation__InsufficientBalance());
 
         uint256 amount = (stakedAmounts[msg.sender] *
