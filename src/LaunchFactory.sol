@@ -3,19 +3,22 @@ pragma solidity 0.8.28;
 
 import "./lib/Structs.sol";
 import "./lib/Errors.sol";
+import "./lib/Events.sol";
 
 import {Curation} from "./Curation.sol";
 
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract TokenLauncherFactory is Ownable {
+import {console} from "forge-std/console.sol";
+
+contract LaunchFactory is Ownable {
+    using SafeERC20 for IERC20;
     using Clones for address;
 
-    event ImplementationUpgraded(address indexed newImplementation);
-    event SubmissionCreated(address indexed token);
-
     address public curationImplementation;
+    address public immutable i_positionManager;
 
     modifier _validateSubmission(CurationDetails calldata curationDetails) {
         require(
@@ -28,8 +31,12 @@ contract TokenLauncherFactory is Ownable {
         _;
     }
 
-    constructor(address _curationImplementation) Ownable(msg.sender) {
+    constructor(
+        address _curationImplementation,
+        address _positionManager
+    ) Ownable(msg.sender) {
         curationImplementation = _curationImplementation;
+        i_positionManager = _positionManager;
     }
 
     function createSubmission(
@@ -37,15 +44,22 @@ contract TokenLauncherFactory is Ownable {
     ) public _validateSubmission(curationDetails) returns (address clone) {
         clone = curationImplementation.clone();
 
-        emit SubmissionCreated(clone);
-
         (bool success, ) = clone.call(
             abi.encodeWithSignature(
-                "initialize((address,address,uint256,uin256))",
-                curationDetails
+                "initialize((address,address,uint256,uint256),address)",
+                curationDetails,
+                i_positionManager
             )
         );
         require(success, TokenLauncher__CurationInitFailed());
+
+        curationDetails.curationToken.safeTransferFrom(
+            msg.sender,
+            clone,
+            curationDetails.distributionAmount
+        );
+
+        emit SubmissionCreated(clone);
     }
 
     function upgradeImplementation(

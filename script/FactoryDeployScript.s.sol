@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import "forge-std/Script.sol";
 import "openzeppelin-foundry-upgrades-0.4.0/src/Upgrades.sol";
 
-import {TokenLauncherFactory} from "../src/TokenLauncherFactory.sol";
+import {LaunchFactory} from "../src/LaunchFactory.sol";
 
 contract FactoryDeployScript is Script {
     uint256 deployerPrivateKey;
