@@ -10,15 +10,17 @@ import {Curation} from "./Curation.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {console} from "forge-std/console.sol";
 
-contract LaunchFactory is Ownable {
+contract LaunchFactory is Initializable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
     using Clones for address;
 
     address public curationImplementation;
-    address public immutable i_positionManager;
+    address public positionManager;
 
     modifier _validateSubmission(CurationDetails calldata curationDetails) {
         require(
@@ -31,12 +33,14 @@ contract LaunchFactory is Ownable {
         _;
     }
 
-    constructor(
+    function initialize(
+        address initialOwner,
         address _curationImplementation,
         address _positionManager
-    ) Ownable(msg.sender) {
+    ) public initializer {
+        __Ownable_init(initialOwner);
         curationImplementation = _curationImplementation;
-        i_positionManager = _positionManager;
+        positionManager = _positionManager;
     }
 
     function createSubmission(
@@ -48,7 +52,7 @@ contract LaunchFactory is Ownable {
             abi.encodeWithSignature(
                 "initialize((address,address,uint256,uint256,uint256),address)",
                 curationDetails,
-                i_positionManager
+                positionManager
             )
         );
         require(success, TokenLauncher__CurationInitFailed());

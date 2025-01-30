@@ -9,6 +9,8 @@ import {CurationV2} from "../src/CurationV2.sol";
 import "../src/lib/Structs.sol";
 import "../src/lib/Events.sol";
 
+import "@openzeppelin/foundry-upgrades/src/Upgrades.sol";
+
 contract LaunchFactoryTest is Test {
     LaunchFactory launchFactory;
     Curation curation;
@@ -35,14 +37,22 @@ contract LaunchFactoryTest is Test {
         newToken.initialize("New Token", "NEWT", 18);
 
         curation = new Curation();
-        launchFactory = new LaunchFactory(
-            address(curation),
-            baseSepoliapositionManager
-        );
+        launchFactory = LaunchFactory(deployFactory(address(curationToken)));
 
         deal(address(curationToken), deployer, 1_000_000 ether);
         vm.prank(deployer);
         curationToken.approve(address(launchFactory), 1_000_000 ether);
+    }
+
+    function deployFactory(address _curation) public returns (address proxy) {
+        proxy = Upgrades.deployTransparentProxy(
+            "LaunchFactory.sol",
+            deployer,
+            abi.encodeCall(
+                LaunchFactory.initialize,
+                (deployer, _curation, baseSepoliapositionManager)
+            )
+        );
     }
 
     function test_createSubmision() public {
@@ -81,6 +91,7 @@ contract LaunchFactoryTest is Test {
 
     function getCurationDetails()
         internal
+        view
         returns (CurationDetails memory curationDetails)
     {
         curationDetails = CurationDetails({

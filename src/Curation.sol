@@ -7,7 +7,7 @@ import "./lib/Events.sol";
 
 import {PoolHelper} from "./lib/PoolHelper.sol";
 
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {INonfungiblePositionManager} from "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";

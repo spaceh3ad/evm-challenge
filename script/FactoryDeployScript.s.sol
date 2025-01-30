@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import "forge-std/Script.sol";
-import "openzeppelin-foundry-upgrades-0.4.0/src/Upgrades.sol";
+import "@openzeppelin/foundry-upgrades/src/Upgrades.sol";
 
 import {LaunchFactory} from "../src/LaunchFactory.sol";
 

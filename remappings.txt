@@ -1,4 +1,5 @@
+@openzeppelin/contracts-upgradeable/=dependencies/@openzeppelin-contracts-upgradeable-5.2.0/
 @openzeppelin/contracts/=dependencies/@openzeppelin-contracts-5.2.0/
 @uniswap/v3-core/=dependencies/@uniswap-v3-core-1.0.2/
 @uniswap/v3-periphery/=dependencies/@uniswap-v3-periphery-1.4.4/
-openzeppelin-foundry-upgrades-0.4.0/=dependencies/openzeppelin-foundry-upgrades-0.4.0/
+@openzeppelin/foundry-upgrades/=dependencies/openzeppelin-foundry-upgrades-0.4.0/
