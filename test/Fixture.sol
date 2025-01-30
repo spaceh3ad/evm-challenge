@@ -89,9 +89,30 @@ contract Fixture is Test {
 
     function createSubmission(
         address _mintTo
-    ) public returns (address curationInstance) {
-        return
-            launchFactory.createSubmission(getSampleCurationDetails(_mintTo));
+    )
+        public
+        returns (
+            address curationInstance,
+            CurationDetails memory curationDetails
+        )
+    {
+        curationDetails = getSampleCurationDetails(_mintTo);
+        return (
+            launchFactory.createSubmission(curationDetails),
+            curationDetails
+        );
+    }
+
+    function stake(
+        address sender,
+        address _curationInstance,
+        uint256 _stakeAmount
+    ) public {
+        vm.startPrank(sender);
+        deal(address(curationToken), sender, _stakeAmount);
+        curationToken.approve(_curationInstance, _stakeAmount);
+        Curation(_curationInstance).stake(_stakeAmount);
+        vm.stopPrank();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -124,5 +145,22 @@ contract Fixture is Test {
             500_000 ether,
             200_000 ether
         );
+    }
+
+    function findEvent(
+        Vm.Log[] memory entries,
+        bytes32 expectedEventSig,
+        address expectedEmitter
+    ) internal pure returns (bool found, bytes memory data) {
+        for (uint256 i = 0; i < entries.length; i++) {
+            Vm.Log memory _log = entries[i];
+            if (
+                _log.topics[0] == expectedEventSig &&
+                _log.emitter == expectedEmitter
+            ) {
+                return (true, _log.data);
+            }
+        }
+        return (false, new bytes(0));
     }
 }
