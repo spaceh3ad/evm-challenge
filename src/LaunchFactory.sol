@@ -46,7 +46,7 @@ contract LaunchFactory is Ownable {
 
         (bool success, ) = clone.call(
             abi.encodeWithSignature(
-                "initialize((address,address,uint256,uint256),address)",
+                "initialize((address,address,uint256,uint256,uint256),address)",
                 curationDetails,
                 i_positionManager
             )

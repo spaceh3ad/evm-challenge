@@ -8,6 +8,7 @@ struct CurationDetails {
     IERC20 newToken;
     uint256 distributionAmount;
     uint256 targetAmount;
+    uint256 liquidityAmount;
 }
 
 enum CurationStatus {
