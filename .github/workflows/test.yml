@@ -33,7 +33,7 @@ jobs:
 
       - name: Run Forge build
         run: |
-          forge build --sizes
+          forge clean && forge build --sizes
         id: build
 
       - name: Run Forge tests
