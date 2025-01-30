@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./lib/Structs.sol";
-import "./lib/Errors.sol";
-import "./lib/Events.sol";
+import "../../lib/Structs.sol";
+import "../../lib/Errors.sol";
+import "../../lib/Events.sol";
 
-import {Curation} from "./Curation.sol";
+import {Curation} from "../../curation/v1/Curation.sol";
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
-import {console} from "forge-std/console.sol";
 
 contract LaunchFactory is Initializable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
@@ -46,6 +44,15 @@ contract LaunchFactory is Initializable, OwnableUpgradeable {
     function createSubmission(
         CurationDetails calldata curationDetails
     ) public _validateSubmission(curationDetails) returns (address clone) {
+        uint256 totalAmount = curationDetails.distributionAmount +
+            curationDetails.liquidityAmount;
+
+        curationDetails.curationToken.safeTransferFrom(
+            msg.sender,
+            clone,
+            totalAmount
+        );
+
         clone = curationImplementation.clone();
 
         (bool success, ) = clone.call(
@@ -56,12 +63,6 @@ contract LaunchFactory is Initializable, OwnableUpgradeable {
             )
         );
         require(success, TokenLauncher__CurationInitFailed());
-
-        curationDetails.curationToken.safeTransferFrom(
-            msg.sender,
-            clone,
-            curationDetails.distributionAmount
-        );
 
         emit SubmissionCreated(clone);
     }
