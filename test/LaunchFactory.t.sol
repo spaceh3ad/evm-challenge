@@ -3,9 +3,9 @@ pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 import {MockERC20} from "forge-std/mocks/MockERC20.sol";
-
 import {LaunchFactory} from "../src/LaunchFactory.sol";
 import {Curation} from "../src/Curation.sol";
+import {CurationV2} from "../src/CurationV2.sol";
 import "../src/lib/Structs.sol";
 import "../src/lib/Events.sol";
 
@@ -39,25 +39,56 @@ contract LaunchFactoryTest is Test {
             address(curation),
             baseSepoliapositionManager
         );
+
+        deal(address(curationToken), deployer, 1_000_000 ether);
+        vm.prank(deployer);
+        curationToken.approve(address(launchFactory), 1_000_000 ether);
     }
 
     function test_createSubmision() public {
-        deal(address(curationToken), deployer, 1_000_000 ether);
-
-        CurationDetails memory curationDetails = CurationDetails({
-            curationToken: IERC20(address(curationToken)),
-            newToken: IERC20(address(newToken)),
-            distributionAmount: 1_000_000 ether,
-            targetAmount: 200_000 ether
-        });
-
-        vm.startPrank(deployer);
-        curationToken.approve(address(launchFactory), 1_000_000 ether);
-
         vm.expectEmit(false, false, false, false, address(launchFactory));
         emit SubmissionCreated(address(curation));
 
-        launchFactory.createSubmission(curationDetails);
-        vm.stopPrank();
+        vm.prank(deployer);
+        launchFactory.createSubmission(getCurationDetails());
+    }
+
+    function test_upgradeImplemntation() public {
+        address newCurationImplementation = address(new CurationV2());
+
+        vm.expectEmit(true, false, false, false, address(launchFactory));
+        emit ImplementationUpgraded(newCurationImplementation);
+
+        launchFactory.upgradeImplementation(newCurationImplementation);
+        assertEq(
+            launchFactory.curationImplementation(),
+            newCurationImplementation
+        );
+    }
+
+    function test_newFeatureInCurationV2() public {
+        // resue test case to upgrade implementation
+        test_upgradeImplemntation();
+
+        vm.prank(deployer);
+        address curationIntance = launchFactory.createSubmission(
+            getCurationDetails()
+        );
+
+        CurationV2(curationIntance).setV2();
+        assertEq(CurationV2(curationIntance).isV2(), true);
+    }
+
+    function getCurationDetails()
+        internal
+        returns (CurationDetails memory curationDetails)
+    {
+        curationDetails = CurationDetails({
+            curationToken: IERC20(address(curationToken)),
+            newToken: IERC20(address(newToken)),
+            distributionAmount: 1_000_000 ether,
+            targetAmount: 200_000 ether,
+            liquidityAmount: 300_000 ether
+        });
     }
 }
