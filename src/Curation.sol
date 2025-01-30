@@ -3,6 +3,8 @@ pragma solidity 0.8.28;
 
 import "./lib/Errors.sol";
 import "./lib/Structs.sol";
+import "./lib/Events.sol";
+
 import {PoolHelper} from "./lib/PoolHelper.sol";
 
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
@@ -31,6 +33,7 @@ contract Curation is Initializable {
     ) public initializer {
         curationDetails = _curationDetails;
         positionManager = _positionManager;
+        curationStatus = CurationStatus.PENDING;
     }
 
     function stake(
@@ -54,7 +57,10 @@ contract Curation is Initializable {
         stakedAmounts[msg.sender] += amount;
 
         if (curationStatus == CurationStatus.ENDED) {
-            _setUpPool();
+            address pool = _setUpPool();
+            emit PoolCreated(pool);
+        } else {
+            emit Staked(msg.sender, amount);
         }
     }
 
@@ -84,7 +90,7 @@ contract Curation is Initializable {
         curationDetails.newToken.safeTransfer(msg.sender, amount);
     }
 
-    function _setUpPool() internal {
+    function _setUpPool() internal returns (address pool) {
         (address token0, address token1) = PoolHelper.sortTokens(
             address(curationDetails.newToken),
             address(curationDetails.curationToken)
@@ -95,7 +101,7 @@ contract Curation is Initializable {
             curationDetails.distributionAmount
         );
 
-        address pool = INonfungiblePositionManager(positionManager)
+        pool = INonfungiblePositionManager(positionManager)
             .createAndInitializePoolIfNecessary(
                 token0,
                 token1,
