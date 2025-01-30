@@ -33,6 +33,13 @@ contract Curation is Initializable {
         curationDetails = _curationDetails;
         positionManager = _positionManager;
         curationStatus = CurationStatus.PENDING;
+
+        require(
+            _curationDetails.newToken.balanceOf(address(this)) ==
+                _curationDetails.distributionAmount +
+                    _curationDetails.liquidityAmount,
+            Curation__InsufficientAmountProvided()
+        );
     }
 
     function stake(
@@ -55,11 +62,11 @@ contract Curation is Initializable {
 
         stakedAmounts[msg.sender] += amount;
 
+        emit Staked(msg.sender, amount);
+
         if (curationStatus == CurationStatus.ENDED) {
             address pool = _setUpPool();
             emit PoolCreated(pool);
-        } else {
-            emit Staked(msg.sender, amount);
         }
     }
 
@@ -89,6 +96,10 @@ contract Curation is Initializable {
         curationDetails.newToken.safeTransfer(msg.sender, amount);
     }
 
+    function getCurationDetails() public view returns (CurationDetails memory) {
+        return curationDetails;
+    }
+
     function _setUpPool() internal returns (address pool) {
         (address token0, address token1) = PoolHelper.sortTokens(
             address(curationDetails.newToken),
@@ -97,7 +108,7 @@ contract Curation is Initializable {
 
         uint160 sqrtPriceX96 = PoolHelper.getSqrtPriceX96(
             curationDetails.targetAmount,
-            curationDetails.distributionAmount
+            curationDetails.liquidityAmount
         );
 
         pool = INonfungiblePositionManager(positionManager)
@@ -114,9 +125,9 @@ contract Curation is Initializable {
         INonfungiblePositionManager(positionManager).mint(
             PoolHelper.getMintParams(
                 IUniswapV3Pool(pool),
-                curationDetails.targetAmount / 2,
-                curationDetails.targetAmount / 2,
-                address(this)
+                curationDetails.targetAmount,
+                curationDetails.liquidityAmount,
+                curationDetails.creator
             )
         );
     }
