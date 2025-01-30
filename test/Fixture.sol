@@ -12,6 +12,7 @@ import {Curation} from "../src/curation/v1/Curation.sol";
 import {CurationV2} from "../src/curation/v2/CurationV2.sol";
 import "../src/lib/Structs.sol";
 import "../src/lib/Events.sol";
+import "../src/lib/Errors.sol";
 
 contract Fixture is Test {
     LaunchFactory launchFactory;
@@ -34,6 +35,9 @@ contract Fixture is Test {
 
         deployer = makeAddr("deployer");
         bob = makeAddr("bob");
+
+        vm.label(deployer, "deployer");
+        vm.label(bob, "bob");
 
         curationToken = new MockERC20();
         curationToken.initialize("Curation Token", "CURT", 18);

@@ -12,6 +12,9 @@ contract CurationTest is Fixture {
 
         alice = makeAddr("alice");
         eve = makeAddr("eve");
+
+        vm.label(alice, "alice");
+        vm.label(eve, "eve");
     }
 
     function test_stake() public {
@@ -50,7 +53,10 @@ contract CurationTest is Fixture {
 
         vm.recordLogs();
 
-        stake(eve, curationInstance, 100_000 ether);
+        stake(eve, curationInstance, 150_000 ether);
+
+        // shouldnt transfer more then targetAmount
+        assertEq(curationToken.balanceOf(eve), 50_000 ether);
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
@@ -65,5 +71,32 @@ contract CurationTest is Fixture {
         );
 
         assertEq(found, true);
+    }
+
+    function test_canUnstake() public {
+        vm.startPrank(deployer);
+        (address curationInstance, ) = createSubmission(deployer);
+        vm.stopPrank();
+
+        stake(bob, curationInstance, 170_000 ether);
+
+        vm.startPrank(bob);
+        Curation(curationInstance).unstake(50_000 ether);
+        vm.stopPrank();
+
+        assertEq(Curation(curationInstance).stakedAmounts(bob), 120_000 ether);
+    }
+
+    function test_unstakeAfterCurationEnded() public {
+        vm.startPrank(deployer);
+        (address curationInstance, ) = createSubmission(deployer);
+        vm.stopPrank();
+
+        stake(bob, curationInstance, 500_000 ether);
+
+        vm.expectRevert(Curation__InvalidStatus.selector);
+
+        vm.prank(bob);
+        Curation(curationInstance).unstake(50_000 ether);
     }
 }
