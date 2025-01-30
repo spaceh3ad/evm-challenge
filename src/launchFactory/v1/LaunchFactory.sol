@@ -19,13 +19,14 @@ contract LaunchFactory is Initializable, OwnableUpgradeable {
 
     address public curationImplementation;
     address public positionManager;
+    address[] public curations;
 
-    modifier _validateSubmission(CurationDetails calldata curationDetails) {
+    modifier _validateSubmission(CurationDetails calldata _curationDetails) {
         require(
-            address(curationDetails.curationToken) != address(0) &&
-                address(curationDetails.newToken) != address(0) &&
-                curationDetails.distributionAmount > 0 &&
-                curationDetails.targetAmount > 0,
+            address(_curationDetails.curationToken) != address(0) &&
+                address(_curationDetails.newToken) != address(0) &&
+                _curationDetails.distributionAmount > 0 &&
+                _curationDetails.targetAmount > 0,
             TokenLauncher__InvalidSubmissionParams()
         );
         _;
@@ -42,28 +43,29 @@ contract LaunchFactory is Initializable, OwnableUpgradeable {
     }
 
     function createSubmission(
-        CurationDetails calldata curationDetails
-    ) public _validateSubmission(curationDetails) returns (address clone) {
-        uint256 totalAmount = curationDetails.distributionAmount +
-            curationDetails.liquidityAmount;
+        CurationDetails calldata _curationDetails
+    ) public _validateSubmission(_curationDetails) returns (address clone) {
+        uint256 totalAmount = _curationDetails.distributionAmount +
+            _curationDetails.liquidityAmount;
 
-        curationDetails.curationToken.safeTransferFrom(
+        clone = curationImplementation.clone();
+
+        _curationDetails.newToken.safeTransferFrom(
             msg.sender,
             clone,
             totalAmount
         );
 
-        clone = curationImplementation.clone();
-
         (bool success, ) = clone.call(
             abi.encodeWithSignature(
-                "initialize((address,address,uint256,uint256,uint256),address)",
-                curationDetails,
+                "initialize((address,address,uint256,uint256,uint256,address),address)",
+                _curationDetails,
                 positionManager
             )
         );
         require(success, TokenLauncher__CurationInitFailed());
 
+        curations.push(clone);
         emit SubmissionCreated(clone);
     }
 

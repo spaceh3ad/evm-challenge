@@ -9,6 +9,13 @@ struct CurationDetails {
     uint256 distributionAmount;
     uint256 targetAmount;
     uint256 liquidityAmount;
+    address creator;
+}
+
+struct FullCurationInfo {
+    CurationDetails curationDetails;
+    address curationAddress;
+    CurationStatus curationStatus;
 }
 
 enum CurationStatus {
