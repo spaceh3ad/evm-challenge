@@ -9,10 +9,17 @@ contract LaunchFactoryTest is Fixture {
     }
 
     function test_createSubmision() public {
-        vm.expectEmit(false, false, false, false, address(launchFactory));
-        emit SubmissionCreated(address(curation));
+        vm.startPrank(deployer);
+        CurationDetails memory curationDetails = getSampleCurationDetails(
+            deployer
+        );
 
-        createSubmission();
+        vm.expectEmit(false, false, false, false, address(launchFactory));
+        // we dont check curation address
+        emit SubmissionCreated(address(0));
+
+        launchFactory.createSubmission(curationDetails);
+        vm.stopPrank();
     }
 
     function test_upgradeFactory() public {
@@ -21,7 +28,9 @@ contract LaunchFactoryTest is Fixture {
         bytes memory _data = hex"";
         upgradeFactory(_proxy, _newImplementationContractName, _data);
 
-        address _curation = createSubmission();
+        vm.startPrank(deployer);
+        address _curation = createSubmission(deployer);
+        vm.stopPrank();
 
         LaunchFactoryV2(_proxy).curations(0);
         assertEq(LaunchFactoryV2(_proxy).curations(0), _curation);
@@ -45,10 +54,11 @@ contract LaunchFactoryTest is Fixture {
         // resue test case to upgrade curation implementation
         test_upgradeCurationImplementation();
 
-        vm.prank(deployer);
+        vm.startPrank(deployer);
         address curationInstance = launchFactory.createSubmission(
-            getCurationDetails()
+            getSampleCurationDetails(deployer)
         );
+        vm.stopPrank();
 
         CurationV2(curationInstance).setV2();
         assertEq(CurationV2(curationInstance).isV2(), true);

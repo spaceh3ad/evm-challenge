@@ -9,16 +9,19 @@ contract CurationTest is Fixture {
     }
 
     function test_stake() public {
-        CurationDetails memory curationDetails = getCurationDetails();
+        vm.startPrank(deployer);
+        CurationDetails memory curationDetails = getSampleCurationDetails(
+            deployer
+        );
 
-        vm.prank(deployer);
         address curationInstance = launchFactory.createSubmission(
             curationDetails
         );
+        vm.stopPrank();
 
         uint256 bobStakeAmount = 50_000 ether;
 
-        deal(address(curationDetails.curationToken), bob, bobStakeAmount);
+        deal(address(curationToken), bob, bobStakeAmount);
 
         vm.startPrank(bob);
         curationDetails.curationToken.approve(curationInstance, bobStakeAmount);

@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import "forge-std/Test.sol";
 import {MockERC20} from "forge-std/mocks/MockERC20.sol";
 import "@openzeppelin/foundry-upgrades/src/Upgrades.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 import {LaunchFactory} from "../src/launchFactory/v1/LaunchFactory.sol";
 import {LaunchFactoryV2} from "../src/launchFactory/v2/LaunchFactoryV2.sol";
@@ -16,8 +17,9 @@ contract Fixture is Test {
     LaunchFactory launchFactory;
     Curation curation;
 
+    uint256 tokenIndex = 0;
+
     MockERC20 curationToken;
-    MockERC20 newToken;
 
     address baseSepoliapositionManager =
         0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2;
@@ -36,16 +38,29 @@ contract Fixture is Test {
         curationToken = new MockERC20();
         curationToken.initialize("Curation Token", "CURT", 18);
 
-        newToken = new MockERC20();
-        newToken.initialize("New Token", "NEWT", 18);
-
         curation = new Curation();
         launchFactory = LaunchFactory(deployFactory(address(curation)));
+    }
 
-        deal(address(newToken), deployer, 100_000_000 ether);
+    function createNewToken(
+        address _mintTo,
+        uint256 _mintAmount
+    ) public returns (address) {
+        string memory tokenName = string(
+            abi.encodePacked("New Token:", Strings.toString(tokenIndex))
+        );
+        string memory tokenSymbol = string(
+            abi.encodePacked("NEWT:", Strings.toString(tokenIndex))
+        );
 
-        vm.prank(deployer);
-        newToken.approve(address(launchFactory), type(uint256).max);
+        MockERC20 _newToken = new MockERC20();
+        _newToken.initialize(tokenName, tokenSymbol, 18);
+
+        deal(address(_newToken), _mintTo, _mintAmount);
+
+        _newToken.approve(address(launchFactory), type(uint256).max);
+
+        return address(_newToken);
     }
 
     function deployFactory(address _curation) public returns (address proxy) {
@@ -72,26 +87,42 @@ contract Fixture is Test {
         );
     }
 
-    function createSubmission() public returns (address curationInstance) {
-        vm.prank(deployer);
-        return launchFactory.createSubmission(getCurationDetails());
+    function createSubmission(
+        address _mintTo
+    ) public returns (address curationInstance) {
+        return
+            launchFactory.createSubmission(getSampleCurationDetails(_mintTo));
     }
 
     /*//////////////////////////////////////////////////////////////
                                  UTILS
     //////////////////////////////////////////////////////////////*/
-    function getCurationDetails()
-        internal
-        view
-        returns (CurationDetails memory curationDetails)
-    {
+    function createCurationDetails(
+        address _newToken,
+        uint256 _distributionAmount,
+        uint256 _targetAmount,
+        uint256 _liqudityAmount
+    ) internal view returns (CurationDetails memory curationDetails) {
         curationDetails = CurationDetails({
             curationToken: IERC20(address(curationToken)),
-            newToken: IERC20(address(newToken)),
-            distributionAmount: 1_000_000 ether,
-            targetAmount: 200_000 ether,
-            liquidityAmount: 300_000 ether,
+            newToken: IERC20(address(_newToken)),
+            distributionAmount: _distributionAmount,
+            targetAmount: _targetAmount,
+            liquidityAmount: _liqudityAmount,
             creator: msg.sender
         });
+    }
+
+    function getSampleCurationDetails(
+        address _to
+    ) internal returns (CurationDetails memory curationDetails) {
+        address _newToken = createNewToken(_to, 1_000_000 ether);
+
+        curationDetails = createCurationDetails(
+            _newToken,
+            100_000 ether,
+            500_000 ether,
+            200_000 ether
+        );
     }
 }
