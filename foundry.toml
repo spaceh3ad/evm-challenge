@@ -9,8 +9,8 @@ build_info = true
 extra_output = ["storageLayout"]
 
 [dependencies]
-openzeppelin-foundry-upgrades = "0.4.0"
-"@openzeppelin-contracts" = "5.2.0"
+openzeppelin-foundry-upgrades = { version = "0.4.0" }
+"@openzeppelin-contracts" = { version = "5.2.0" }
 "@uniswap-v3-core" = { version = "1.0.2", url = "https://github.com/Uniswap/v3-core/archive/refs/heads/0.8.zip" }
 "@uniswap-v3-periphery" = { version = "1.4.4", url = "https://github.com/Uniswap/v3-periphery/archive/refs/heads/0.8.zip" }
-"@openzeppelin-contracts-upgradeable" = "5.2.0"
+"@openzeppelin-contracts-upgradeable" = { version = "5.2.0" }
