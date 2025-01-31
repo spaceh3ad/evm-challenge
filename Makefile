@@ -15,10 +15,10 @@ help:
 	@echo "Targets:"
 	@echo "  test      Run tests with verbose output"
 	@echo "  coverage  Show coverage summary"
-	@echo "  report    Generate and open coverage report
-	@echo "  audit     Run security analysis tools"
-	@echo "  clean     Remove all generated files"
-	@echo "  snapshot  Create test state snapshot"
+	@echo "  report    Generate and open coverage report"
+	@echo "  audit     Run security analysis"
+	@echo "  clean     Remove all build files"
+	@echo "  snapshot  Create gas snapshot"
 
 test: clean
 	@echo "🧪 Running tests..."
