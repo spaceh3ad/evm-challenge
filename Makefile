@@ -6,7 +6,7 @@ DAPP_SRC := src
 TEST_SRC := test
 COVERAGE_DIR := coverage
 AUDIT_DIR := audit
-COVERAGE_FILTER := "test|script|dependencies"
+COVERAGE_FILTER := "test|script|dependencies|v2"
 FILTER_PATHS := "@openzeppelin|@uniswap"
 
 help:
