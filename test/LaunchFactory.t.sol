@@ -22,6 +22,20 @@ contract LaunchFactoryTest is Fixture {
         vm.stopPrank();
     }
 
+    function test_createInvalidSubmision() public {
+        vm.startPrank(deployer);
+        CurationDetails memory curationDetails = getSampleCurationDetails(
+            deployer
+        );
+
+        // intentinally burn some tokens
+        curationDetails.newToken.transfer(address(1234), 850_000 ether);
+
+        vm.expectRevert();
+        launchFactory.createSubmission(curationDetails);
+        vm.stopPrank();
+    }
+
     function test_upgradeFactory() public {
         address _proxy = address(launchFactory);
         string memory _newImplementationContractName = "LaunchFactoryV2.sol";

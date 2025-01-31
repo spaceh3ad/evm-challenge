@@ -82,6 +82,10 @@ contract CurationTest is Fixture {
 
         vm.startPrank(bob);
         Curation(curationInstance).unstake(50_000 ether);
+
+        vm.expectRevert(Curation__InsufficientBalance.selector);
+        Curation(curationInstance).unstake(500_000 ether); // cant unstake more then staked
+
         vm.stopPrank();
 
         assertEq(Curation(curationInstance).stakedAmounts(bob), 120_000 ether);
@@ -98,5 +102,47 @@ contract CurationTest is Fixture {
 
         vm.prank(bob);
         Curation(curationInstance).unstake(50_000 ether);
+    }
+
+    function test_claim() public {
+        vm.startPrank(deployer);
+        (
+            address curationInstance,
+            CurationDetails memory curationDetails
+        ) = createSubmission(deployer);
+        vm.stopPrank();
+
+        stake(bob, curationInstance, 500_000 ether);
+
+        vm.prank(bob);
+        Curation(curationInstance).claim();
+
+        assertGt(curationDetails.newToken.balanceOf(bob), 0);
+    }
+
+    function test_cantClaimIfCurationNotEnded() public {
+        vm.startPrank(deployer);
+        (address curationInstance, ) = createSubmission(deployer);
+        vm.stopPrank();
+
+        stake(bob, curationInstance, 100_000 ether);
+
+        vm.expectRevert(Curation__InvalidStatus.selector);
+
+        vm.prank(bob);
+        Curation(curationInstance).claim();
+    }
+
+    function test_cantClaimIfDidntStake() public {
+        vm.startPrank(deployer);
+        (address curationInstance, ) = createSubmission(deployer);
+        vm.stopPrank();
+
+        stake(bob, curationInstance, 500_000 ether);
+
+        vm.expectRevert(Curation__InsufficientBalance.selector);
+
+        vm.prank(eve);
+        Curation(curationInstance).claim();
     }
 }
