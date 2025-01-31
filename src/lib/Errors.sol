@@ -8,4 +8,3 @@ error TokenLauncher__CurationInitFailed();
 // Curation Errors
 error Curation__InsufficientBalance();
 error Curation__InvalidStatus();
-error Curation__InsufficientAmountProvided();

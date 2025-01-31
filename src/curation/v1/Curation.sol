@@ -15,6 +15,8 @@ import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Po
 contract Curation is Initializable {
     using SafeERC20 for IERC20;
 
+    uint24 public constant POOL_FEE = 3000;
+
     address public positionManager;
 
     CurationDetails public curationDetails;
@@ -29,22 +31,15 @@ contract Curation is Initializable {
     function initialize(
         CurationDetails calldata _curationDetails,
         address _positionManager
-    ) public initializer {
+    ) external initializer {
         curationDetails = _curationDetails;
         positionManager = _positionManager;
         curationStatus = CurationStatus.PENDING;
-
-        require(
-            _curationDetails.newToken.balanceOf(address(this)) ==
-                _curationDetails.distributionAmount +
-                    _curationDetails.liquidityAmount,
-            Curation__InsufficientAmountProvided()
-        );
     }
 
     function stake(
         uint256 amount
-    ) public validateStatus(CurationStatus.PENDING) {
+    ) external validateStatus(CurationStatus.PENDING) {
         uint256 currentBalance = curationDetails.curationToken.balanceOf(
             address(this)
         );
@@ -72,12 +67,7 @@ contract Curation is Initializable {
 
     function unstake(
         uint256 amount
-    ) public validateStatus(CurationStatus.PENDING) {
-        require(
-            curationDetails.curationToken.balanceOf(address(this)) <
-                curationDetails.targetAmount,
-            Curation__InsufficientBalance()
-        );
+    ) external validateStatus(CurationStatus.PENDING) {
         require(
             stakedAmounts[msg.sender] >= amount,
             Curation__InsufficientBalance()
@@ -86,7 +76,7 @@ contract Curation is Initializable {
         curationDetails.curationToken.safeTransfer(msg.sender, amount);
     }
 
-    function claim() public validateStatus(CurationStatus.ENDED) {
+    function claim() external validateStatus(CurationStatus.ENDED) {
         require(stakedAmounts[msg.sender] > 0, Curation__InsufficientBalance());
 
         uint256 amount = (stakedAmounts[msg.sender] *
@@ -96,7 +86,11 @@ contract Curation is Initializable {
         curationDetails.newToken.safeTransfer(msg.sender, amount);
     }
 
-    function getCurationDetails() public view returns (CurationDetails memory) {
+    function getCurationDetails()
+        external
+        view
+        returns (CurationDetails memory)
+    {
         return curationDetails;
     }
 
@@ -111,13 +105,13 @@ contract Curation is Initializable {
             curationDetails.liquidityAmount
         );
 
-        pool = INonfungiblePositionManager(positionManager)
-            .createAndInitializePoolIfNecessary(
-                token0,
-                token1,
-                uint24(3000),
-                sqrtPriceX96
-            );
+        pool = PoolHelper.initPool(
+            token0,
+            token1,
+            POOL_FEE,
+            sqrtPriceX96,
+            INonfungiblePositionManager(positionManager)
+        );
 
         IERC20(token0).approve(address(positionManager), type(uint256).max);
         IERC20(token1).approve(address(positionManager), type(uint256).max);

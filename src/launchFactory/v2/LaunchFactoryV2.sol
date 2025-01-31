@@ -9,7 +9,6 @@ import {Curation} from "../../curation/v1/Curation.sol";
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -22,22 +21,11 @@ contract LaunchFactoryV2 is Initializable, OwnableUpgradeable {
     address public positionManager;
     address[] public curations;
 
-    modifier _validateSubmission(CurationDetails calldata _curationDetails) {
-        require(
-            address(_curationDetails.curationToken) != address(0) &&
-                address(_curationDetails.newToken) != address(0) &&
-                _curationDetails.distributionAmount > 0 &&
-                _curationDetails.targetAmount > 0,
-            TokenLauncher__InvalidSubmissionParams()
-        );
-        _;
-    }
-
     function initialize(
         address initialOwner,
         address _curationImplementation,
         address _positionManager
-    ) public initializer {
+    ) external initializer {
         __Ownable_init(initialOwner);
         curationImplementation = _curationImplementation;
         positionManager = _positionManager;
@@ -45,7 +33,15 @@ contract LaunchFactoryV2 is Initializable, OwnableUpgradeable {
 
     function createSubmission(
         CurationDetails calldata _curationDetails
-    ) public _validateSubmission(_curationDetails) returns (address clone) {
+    ) external returns (address clone) {
+        require(
+            address(_curationDetails.curationToken) != address(0) &&
+                address(_curationDetails.newToken) != address(0) &&
+                _curationDetails.distributionAmount > 0 &&
+                _curationDetails.targetAmount > 0,
+            TokenLauncher__InvalidSubmissionParams()
+        );
+
         uint256 totalAmount = _curationDetails.distributionAmount +
             _curationDetails.liquidityAmount;
 

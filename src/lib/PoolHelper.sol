@@ -22,36 +22,6 @@ library PoolHelper {
             );
     }
 
-    function addLiquidity(
-        IUniswapV3Pool pool,
-        uint256 amount0Desired,
-        uint256 amount1Desired,
-        address recipient,
-        INonfungiblePositionManager positionManager
-    ) public {
-        uint24 fee = pool.fee();
-        int24 tickSpacing = pool.tickSpacing();
-
-        (int24 tickLower, int24 tickUpper) = getFullRange(tickSpacing);
-
-        INonfungiblePositionManager.MintParams
-            memory mintParams = INonfungiblePositionManager.MintParams(
-                pool.token0(),
-                pool.token1(),
-                fee,
-                tickLower,
-                tickUpper,
-                amount0Desired,
-                amount1Desired,
-                0,
-                0,
-                recipient,
-                block.timestamp + 100
-            );
-
-        positionManager.mint(mintParams);
-    }
-
     function getFullRange(
         int24 tickSpacing
     ) public pure returns (int24 tickLower, int24 tickUpper) {
