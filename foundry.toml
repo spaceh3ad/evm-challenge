@@ -8,6 +8,16 @@ ffi = true
 build_info = true
 extra_output = ["storageLayout"]
 
+[invariant]
+runs = 8
+depth = 64
+fail_on_revert = false
+
+
+[fuzz]
+runs = 256
+
+
 [dependencies]
 openzeppelin-foundry-upgrades = { version = "0.4.0" }
 "@openzeppelin-contracts" = { version = "5.2.0" }
