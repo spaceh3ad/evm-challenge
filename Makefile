@@ -6,7 +6,7 @@ DAPP_SRC := src
 TEST_SRC := test
 COVERAGE_DIR := coverage
 AUDIT_DIR := audit
-COVERAGE_FILTER := "test|script|dependencies|v2"
+COVERAGE_FILTER := "(test/|dependencies/|script/|v2/)"
 FILTER_PATHS := "@openzeppelin|@uniswap"
 
 help:
@@ -49,6 +49,7 @@ audit: audit-dirs
 clean:
 	@echo "🧹 Cleaning up..."
 	@forge clean
+	@forge cache clean
 	@rm -rf $(COVERAGE_DIR) $(AUDIT_DIR)
 
 snapshot:
