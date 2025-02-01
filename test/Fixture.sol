@@ -18,6 +18,10 @@ contract Fixture is Test {
     LaunchFactory launchFactory;
     Curation curation;
 
+    uint256 constant DISTRIBUTION_AMOUNT = 100_000 ether;
+    uint256 constant TARGET_AMOUNT = 500_000 ether;
+    uint256 constant LIQUIDITY_AMOUNT = 200_000 ether;
+
     uint256 tokenIndex = 0;
 
     MockERC20 curationToken;
@@ -27,6 +31,8 @@ contract Fixture is Test {
 
     address deployer;
     address bob;
+    address alice;
+    address eve;
 
     function setUp() public virtual {
         string memory rpcAlias = "base_sepolia";
@@ -35,15 +41,21 @@ contract Fixture is Test {
 
         deployer = makeAddr("deployer");
         bob = makeAddr("bob");
-
-        vm.label(deployer, "deployer");
-        vm.label(bob, "bob");
+        alice = makeAddr("alice");
+        eve = makeAddr("eve");
 
         curationToken = new MockERC20();
         curationToken.initialize("Curation Token", "CURT", 18);
 
         curation = new Curation();
         launchFactory = LaunchFactory(deployFactory(address(curation)));
+
+        vm.label(alice, "alice");
+        vm.label(eve, "eve");
+        vm.label(deployer, "deployer");
+        vm.label(bob, "bob");
+        vm.label(address(curation), "curation");
+        vm.label(address(launchFactory), "launchFactory");
     }
 
     function createNewToken(
@@ -100,11 +112,19 @@ contract Fixture is Test {
             CurationDetails memory curationDetails
         )
     {
+        vm.startPrank(_mintTo);
         curationDetails = getSampleCurationDetails(_mintTo);
-        return (
-            launchFactory.createSubmission(curationDetails),
-            curationDetails
-        );
+        curationInstance = launchFactory.createSubmission(curationDetails);
+        vm.stopPrank();
+        return (curationInstance, curationDetails);
+    }
+
+    function createSubmission(
+        CurationDetails memory _curationDetials
+    ) public returns (address curationInstance) {
+        vm.startPrank(_curationDetials.creator);
+        curationInstance = launchFactory.createSubmission(_curationDetials);
+        vm.stopPrank();
     }
 
     function stake(
@@ -119,14 +139,12 @@ contract Fixture is Test {
         vm.stopPrank();
     }
 
-    /*//////////////////////////////////////////////////////////////
-                                 UTILS
-    //////////////////////////////////////////////////////////////*/
     function createCurationDetails(
         address _newToken,
         uint256 _distributionAmount,
         uint256 _targetAmount,
-        uint256 _liqudityAmount
+        uint256 _liqudityAmount,
+        address _to
     ) internal view returns (CurationDetails memory curationDetails) {
         curationDetails = CurationDetails({
             curationToken: IERC20(address(curationToken)),
@@ -134,20 +152,24 @@ contract Fixture is Test {
             distributionAmount: _distributionAmount,
             targetAmount: _targetAmount,
             liquidityAmount: _liqudityAmount,
-            creator: msg.sender
+            creator: _to
         });
     }
 
     function getSampleCurationDetails(
         address _to
     ) internal returns (CurationDetails memory curationDetails) {
-        address _newToken = createNewToken(_to, 1_000_000 ether);
+        address _newToken = createNewToken(
+            _to,
+            DISTRIBUTION_AMOUNT + LIQUIDITY_AMOUNT
+        );
 
         curationDetails = createCurationDetails(
             _newToken,
-            100_000 ether,
-            500_000 ether,
-            200_000 ether
+            DISTRIBUTION_AMOUNT,
+            TARGET_AMOUNT,
+            LIQUIDITY_AMOUNT,
+            _to
         );
     }
 
@@ -155,16 +177,16 @@ contract Fixture is Test {
         Vm.Log[] memory entries,
         bytes32 expectedEventSig,
         address expectedEmitter
-    ) internal pure returns (bool found, bytes memory data) {
+    ) internal pure returns (bool found, address) {
         for (uint256 i = 0; i < entries.length; i++) {
             Vm.Log memory _log = entries[i];
             if (
                 _log.topics[0] == expectedEventSig &&
                 _log.emitter == expectedEmitter
             ) {
-                return (true, _log.data);
+                return (true, address(uint160(uint256(_log.topics[1]))));
             }
         }
-        return (false, new bytes(0));
+        return (false, address(0));
     }
 }

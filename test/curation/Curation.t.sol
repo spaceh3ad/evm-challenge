@@ -1,31 +1,27 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./Fixture.sol";
+import "../Fixture.sol";
+import {IERC721} from "forge-std/interfaces/IERC721.sol";
 
 contract CurationTest is Fixture {
-    address alice;
-    address eve;
-
     function setUp() public override {
         super.setUp();
-
-        alice = makeAddr("alice");
-        eve = makeAddr("eve");
-
-        vm.label(alice, "alice");
-        vm.label(eve, "eve");
     }
 
     function test_stake() public {
-        vm.startPrank(deployer);
-
         (
             address curationInstance,
             CurationDetails memory curationDetails
         ) = createSubmission(deployer);
 
-        vm.stopPrank();
+        CurationDetails memory _curationDetails = Curation(curationInstance)
+            .getCurationDetails();
+
+        assertEq(
+            address(_curationDetails.curationToken),
+            address(curationToken)
+        );
 
         uint256 bobStakeAmount = 50_000 ether;
 
@@ -44,9 +40,7 @@ contract CurationTest is Fixture {
     }
 
     function test_stakeTargetAmount() public {
-        vm.startPrank(deployer);
         (address curationInstance, ) = createSubmission(deployer);
-        vm.stopPrank();
 
         stake(bob, curationInstance, 170_000 ether);
         stake(alice, curationInstance, 230_000 ether);
@@ -74,9 +68,7 @@ contract CurationTest is Fixture {
     }
 
     function test_canUnstake() public {
-        vm.startPrank(deployer);
         (address curationInstance, ) = createSubmission(deployer);
-        vm.stopPrank();
 
         stake(bob, curationInstance, 170_000 ether);
 
@@ -84,19 +76,17 @@ contract CurationTest is Fixture {
         Curation(curationInstance).unstake(50_000 ether);
 
         vm.expectRevert(Curation__InsufficientBalance.selector);
-        Curation(curationInstance).unstake(500_000 ether); // cant unstake more then staked
+        Curation(curationInstance).unstake(500_000 ether);
 
         vm.stopPrank();
 
         assertEq(Curation(curationInstance).stakedAmounts(bob), 120_000 ether);
     }
 
-    function test_unstakeAfterCurationEnded() public {
-        vm.startPrank(deployer);
+    function test_unstakeAfteTargetReached() public {
         (address curationInstance, ) = createSubmission(deployer);
-        vm.stopPrank();
 
-        stake(bob, curationInstance, 500_000 ether);
+        stake(bob, curationInstance, TARGET_AMOUNT);
 
         vm.expectRevert(Curation__InvalidStatus.selector);
 
@@ -105,25 +95,25 @@ contract CurationTest is Fixture {
     }
 
     function test_claim() public {
-        vm.startPrank(deployer);
         (
             address curationInstance,
             CurationDetails memory curationDetails
         ) = createSubmission(deployer);
-        vm.stopPrank();
 
-        stake(bob, curationInstance, 500_000 ether);
+        stake(bob, curationInstance, TARGET_AMOUNT / 2);
+        stake(eve, curationInstance, TARGET_AMOUNT / 2);
 
         vm.prank(bob);
         Curation(curationInstance).claim();
 
-        assertGt(curationDetails.newToken.balanceOf(bob), 0);
+        assertEq(
+            curationDetails.newToken.balanceOf(bob),
+            curationDetails.distributionAmount / 2
+        );
     }
 
     function test_cantClaimIfCurationNotEnded() public {
-        vm.startPrank(deployer);
         (address curationInstance, ) = createSubmission(deployer);
-        vm.stopPrank();
 
         stake(bob, curationInstance, 100_000 ether);
 
@@ -134,9 +124,7 @@ contract CurationTest is Fixture {
     }
 
     function test_cantClaimIfDidntStake() public {
-        vm.startPrank(deployer);
         (address curationInstance, ) = createSubmission(deployer);
-        vm.stopPrank();
 
         stake(bob, curationInstance, 500_000 ether);
 
@@ -144,5 +132,12 @@ contract CurationTest is Fixture {
 
         vm.prank(eve);
         Curation(curationInstance).claim();
+    }
+
+    function test_LiquidityLockedInPool() public {
+        (address curationInstance, ) = createSubmission(deployer);
+
+        stake(bob, address(curationInstance), TARGET_AMOUNT);
+        assertEq(IERC721(baseSepoliapositionManager).balanceOf(deployer), 1);
     }
 }

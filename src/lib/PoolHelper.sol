@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {INonfungiblePositionManager} from "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import {TickMath} from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 library PoolHelper {
     function initPool(
@@ -57,11 +58,12 @@ library PoolHelper {
     }
 
     function getSqrtPriceX96(
-        uint256 targetAmount,
-        uint256 distributionAmount
+        uint256 amount0,
+        uint256 amount1
     ) internal pure returns (uint160) {
-        uint256 price = targetAmount / distributionAmount;
-        return uint160(sqrt(price) * (2 ** 96));
+        uint256 ratioX128 = (amount1 << 128) / amount0;
+        uint256 sqrtRatioX64 = Math.sqrt(ratioX128);
+        return uint160(sqrtRatioX64 << 32);
     }
 
     function sortTokens(
@@ -72,19 +74,5 @@ library PoolHelper {
         (token0, token1) = tokenA < tokenB
             ? (tokenA, tokenB)
             : (tokenB, tokenA);
-    }
-
-    function sqrt(uint256 x) public pure returns (uint256) {
-        if (x == 0) {
-            return 0;
-        }
-
-        uint256 z = (x + 1) / 2;
-        uint256 y = x;
-        while (z < y) {
-            y = z;
-            z = (x / z + z) / 2;
-        }
-        return y;
     }
 }

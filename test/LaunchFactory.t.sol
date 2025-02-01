@@ -29,7 +29,12 @@ contract LaunchFactoryTest is Fixture {
         );
 
         // intentinally burn some tokens
-        curationDetails.newToken.transfer(address(1234), 850_000 ether);
+        curationDetails.newToken.transfer(
+            address(1234),
+            curationDetails.distributionAmount +
+                curationDetails.liquidityAmount -
+                100_000 ether
+        );
 
         vm.expectRevert();
         launchFactory.createSubmission(curationDetails);
@@ -42,9 +47,7 @@ contract LaunchFactoryTest is Fixture {
         bytes memory _data = hex"";
         upgradeFactory(_proxy, _newImplementationContractName, _data);
 
-        vm.startPrank(deployer);
         (address curationInstance, ) = createSubmission(deployer);
-        vm.stopPrank();
 
         LaunchFactoryV2(_proxy).curations(0);
         assertEq(LaunchFactoryV2(_proxy).curations(0), curationInstance);
