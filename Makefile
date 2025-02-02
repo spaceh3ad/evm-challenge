@@ -6,7 +6,7 @@ DAPP_SRC := src
 TEST_SRC := test
 COVERAGE_DIR := coverage
 AUDIT_DIR := audit
-COVERAGE_FILTER := "(test/|dependencies/|script/|v2/)"
+COVERAGE_FILTER := "(test/|dependencies/|script/|v2/|mock)"
 FILTER_PATHS := "@openzeppelin|@uniswap"
 
 help:
@@ -24,11 +24,11 @@ test: clean
 	@echo "🧪 Running tests..."
 	@forge test -vv
 
-coverage: clean
+coverage:
 	@echo "📊 Running coverage analysis..."
 	@forge coverage --no-match-coverage $(COVERAGE_FILTER)
 
-report: clean coverage-dirs
+report: coverage-dirs
 	@echo "📈 Generating LCOV report..."
 	@forge coverage --no-match-coverage $(COVERAGE_FILTER) --report lcov >/dev/null && mv lcov.info $(COVERAGE_DIR)/lcov.info
 	@echo "🖨️  Building HTML report..."

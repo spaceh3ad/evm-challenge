@@ -4,52 +4,62 @@
 
 # Table of Contents
 
-1. [Example](#example)
-2. [Example2](#example2)
-3. [Third Example](#third-example)
-4. [Fourth Example](#fourth-examplehttpwwwfourthexamplecom)
-
-## Example
-
-## Example2
-
-## Third Example
-
-## [Fourth Example](http://www.fourthexample.com)
+1. [Architecture Design Decisions](#1-architecture-design-decisions)
+   - [Clone Factory Pattern](#clone-factory-pattern)
+   - [Upgradeability Strategy](#upgradeability-strategy)
+   - [Liquidity Bootstraping](#liquidity-bootstrapping)
+   - [State Management](#state-management)
+2. [Contract Architecture](#2-contract-architecture)
+   - [2.1 Factory Contract](#21-factory-contract)
+     - [Submission Creation](#submission-creation)
+     - [Upgrade Process](#upgrade-process)
+   - [2.2 Curation Contract](#22-curation-contract)
+     - [State Transitions](#state-transitions)
+3. [Data Flow](#3-data-flow)
+   - [3.1 Token Submission](#31-token-submission)
+   - [3.2 Staking & Pool Creation](#32-staking--pool-creation)
+4. [User Guide](#4-user-guide)
+   - [4.1. Create Submission](#41-create-submission)
+   - [4.2. Staking Tokens](#42-staking-tokens)
+   - [4.3. Unstake Tokens](#43-unstake-tokens)
+   - [4.4. Claiming Rewards](#44-claiming-rewards)
+   - [4.5. Curation Upgrade](#45-curation-upgrade)
+   - [4.6. Factory Upgrade](#46-factory-upgrade)
 
 ## 1. Architecture Design Decisions
 
 ### **Clone Factory Pattern**
 
 - Reduces deployment costs via proxy clones.
-- Uses ERC-1167 minimal proxies for gas-efficient deployment
-- Enables mass creation of curation contracts with shared logic via clones pattern
-- Implementation upgrades affect only new deployments
+- Uses ERC-1167 minimal proxies for gas-efficient deployment.
+- Enables mass creation of curation contracts with shared logic via clones pattern.
+- Implementation upgrades affect only new deployments.
 
 ### **Upgradeability Strategy**
 
-- Transparent Upgradability Proxy for LaunchFactory updates
-- Owner-controlled implementation upgrades
-- Allows changing implementation contract for Curation
+- Transparent Upgradability Proxy for Factory updates.
+- Owner-controlled implementation upgrades.
+- Allows changing implementation contract for Curation.
+- Factory stores and updates curation implementation.
 
 ### **Liquidity Bootstrapping**
 
-- Automated Uniswap V3 pool creation once sufficient tokens are staked
-- Full-range liquidity positions for maximum exposure
-- Price determined by tokens ratio
+- Automated Uniswap V3 pool creation once sufficient tokens are staked.
+- Full-range liquidity positions for maximum exposure.
+- Price determined by tokens ratio.
 
 ### **State Management**
 
-- Two-stage lifecycle (Pending → Ended)
-- Staked amounts tracking with mapping optimizations
-- Token balances verified through SafeERC20
+- Two-stage lifecycle (Pending → Ended).
+- Staked amounts tracking with mapping optimizations.
+- Token balances verified through SafeERC20.
 
 ## 2. Contract Architecture
 
-### 2.1 LaunchFactory
+### 2.1 Factory Contract
 
-```solidity
-contract LaunchFactory {
+```
+contract Factory {
     // Core dependencies
     address public curationImplementation;
     address public positionManager;
@@ -58,11 +68,11 @@ contract LaunchFactory {
     address[] public curations;
 
     // Lifecycle
-    function createSubmission(CurationDetails) → clone
-    function upgradeImplementation(address)
+    function createSubmission(CurationDetails) → clone;
+    function upgradeImplementation(address);
 
     // View
-    function getCurationsData() → FullCurationInfo[]
+    function getCurationsData() → FullCurationInfo[];
 }
 ```
 
@@ -79,14 +89,16 @@ Curation Added to Registry
 ### Upgrade Process
 
 ```
-User → Factory → Clone ← Token Transfers
-               ↓
-           CurationList
+Admin → upgradeImplementation()
+     ↓
+Factory updates stored curation logic
+     ↓
+New Curation Contracts use updated logic
 ```
 
-### 2.2 Curation
+### 2.2 Curation Contract
 
-```solidity
+```
 contract Curation {
     // Configuration
     CurationDetails public curationDetails;
@@ -97,13 +109,13 @@ contract Curation {
     mapping(address → uint256) public stakedAmounts;
 
     // Lifecycle
-    function initialize()
-    function stake(uint256)
-    function unstake(uint256)
-    function claim()
+    function initialize();
+    function stake(uint256);
+    function unstake(uint256);
+    function claim();
 
     // Internal
-    function _setUpPool() → address
+    function _setUpPool();
 }
 ```
 
@@ -129,9 +141,9 @@ unstake()    claim()
 
 ## 4. User Guide
 
-### 1. Create Submition
+### 4.1. Create Submission
 
-```javascript
+```
 // prepare curationDetails object
 const curationDetails = {
   newToken: "0x...", // ERC20 address
@@ -149,62 +161,62 @@ newToken.approve(factory.address, totalAmount);
 factory.createSubmission(curationDetails);
 ```
 
-### 2. Staking Tokens
+### 4.2. Staking Tokens
 
 Requirements:
 
 - curation status == PENDING
 
-```javascript
-// approve curationTokens to new  instance
+```
+// approve curationTokens to new instance
 curationToken.approve(curationAddress, amount);
 
 // invoke stake function on instance
 curationContract.stake(amount);
 ```
 
-### 3. Unstake Tokens
+### 4.3. Unstake Tokens
 
 Requirements:
 
 - curation status == PENDING
 - user has stake
 
-```javascript
+```
 // invoke unstake function on instance
 curationContract.unstake(amount);
 ```
 
-### 4. Claiming Rewards
+### 4.4. Claiming Rewards
 
 Requirements:
 
 - curation status == ENDED
 - user has positive stake
 
-```javascript
+```
 // invoke claim function on instance
 curationContract.claim();
 // claim amount = (stakedAmount / targetAmount) * distributionAmount
 ```
 
-### 5. Curation Implementation Upgrade
+### 4.5. Curation Upgrade
 
 Requirements:
 
 - invoked from privileged account
 - deployed new version of curation
 
-```javascript
+```
 factory.upgradeImplementation(_newImplementation);
 ```
 
-### 6. Factory Upgrade
+### 4.6. Factory Upgrade
 
 Requirements:
 
 - invoked from privileged account
 
-```javascript
-factory.upgradeImplementation(_newImplementation);
+```
+factory.upgradeFactory(_newImplementation);
 ```

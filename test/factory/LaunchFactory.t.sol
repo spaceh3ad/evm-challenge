@@ -80,4 +80,10 @@ contract LaunchFactoryTest is Fixture {
         CurationV2(curationInstance).setV2();
         assertEq(CurationV2(curationInstance).isV2(), true);
     }
+
+    function test_getCurationsData() public {
+        (address curationInstance, ) = createSubmission(deployer);
+        FullCurationInfo[] memory info = launchFactory.getCurationsData();
+        assertEq(info[0].curationAddress, curationInstance);
+    }
 }
