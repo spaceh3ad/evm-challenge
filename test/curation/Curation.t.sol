@@ -57,7 +57,7 @@ contract CurationTest is Fixture {
         bytes32 expectedSig = keccak256("PoolCreated(address)");
 
         // find if PoolCreated event was emitted
-        (bool found, ) = findEvent(entries, expectedSig, curationInstance);
+        bool found = findEvent(entries, expectedSig, curationInstance);
 
         assertEq(
             uint8(Curation(curationInstance).curationStatus()),
@@ -139,5 +139,18 @@ contract CurationTest is Fixture {
 
         stake(bob, address(curationInstance), TARGET_AMOUNT);
         assertEq(IERC721(baseSepoliapositionManager).balanceOf(deployer), 1);
+    }
+
+    function test_invalidSubmission() public {
+        CurationDetails memory curationDetails = createCurationDetails(
+            address(0),
+            0,
+            TARGET_AMOUNT,
+            LIQUIDITY_AMOUNT,
+            deployer
+        );
+
+        vm.expectRevert(TokenLauncher__InvalidSubmissionParams.selector);
+        createSubmission(curationDetails);
     }
 }

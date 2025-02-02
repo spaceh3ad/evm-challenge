@@ -53,7 +53,7 @@ contract CurationInvariantTest is Fixture {
             bytes32 expectedSig = keccak256("PoolCreated(address)");
 
             // find if PoolCreated event was emitted
-            (bool found, ) = findEvent(
+            bool found = findEvent(
                 entries,
                 expectedSig,
                 address(curationInstance)

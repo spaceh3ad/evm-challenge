@@ -177,16 +177,16 @@ contract Fixture is Test {
         Vm.Log[] memory entries,
         bytes32 expectedEventSig,
         address expectedEmitter
-    ) internal pure returns (bool found, address) {
+    ) internal pure returns (bool) {
         for (uint256 i = 0; i < entries.length; i++) {
             Vm.Log memory _log = entries[i];
             if (
                 _log.topics[0] == expectedEventSig &&
                 _log.emitter == expectedEmitter
             ) {
-                return (true, address(uint160(uint256(_log.topics[1]))));
+                return true;
             }
         }
-        return (false, address(0));
+        return false;
     }
 }

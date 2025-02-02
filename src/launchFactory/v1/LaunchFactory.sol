@@ -35,7 +35,8 @@ contract LaunchFactory is Initializable, OwnableUpgradeable {
             address(_curationDetails.curationToken) != address(0) &&
                 address(_curationDetails.newToken) != address(0) &&
                 _curationDetails.distributionAmount > 0 &&
-                _curationDetails.targetAmount > 0,
+                _curationDetails.targetAmount > 0 &&
+                _curationDetails.liquidityAmount > 0,
             TokenLauncher__InvalidSubmissionParams()
         );
 
