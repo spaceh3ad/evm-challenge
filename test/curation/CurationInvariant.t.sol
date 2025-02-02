@@ -22,6 +22,12 @@ contract Handler is Test {
         curation.stake(_amount);
         vm.stopPrank();
     }
+
+    function unstake(address _user, uint256 _amount) external {
+        vm.prank(_user);
+        curation.unstake(_amount);
+        vm.stopPrank();
+    }
 }
 
 contract CurationInvariantTest is Fixture {
@@ -60,6 +66,27 @@ contract CurationInvariantTest is Fixture {
             );
 
             assertEq(found, true);
+        }
+    }
+
+    // should not be possible to unstake more then staked
+    function invariant_shouldHavePendingStatusIfNotStakedTargetAmount() public {
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        bytes32 expectedSig = keccak256("PoolCreated(address)");
+
+        // find if PoolCreated event was emitted
+        bool found = findEvent(entries, expectedSig, address(curationInstance));
+
+        (, , , uint256 targetAmount, , ) = curationInstance.curationDetails();
+        if (
+            curationToken.balanceOf(address(curationInstance)) < targetAmount &&
+            !found
+        ) {
+            assertEq(
+                uint8(curationInstance.curationStatus()),
+                uint8(CurationStatus.PENDING)
+            );
         }
     }
 }

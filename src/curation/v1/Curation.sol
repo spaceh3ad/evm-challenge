@@ -120,6 +120,7 @@ contract Curation is Initializable {
         );
         stakedAmounts[msg.sender] -= amount;
         curationDetails.curationToken.safeTransfer(msg.sender, amount);
+        emit Unstake(msg.sender, amount);
     }
 
     /**
@@ -134,6 +135,7 @@ contract Curation is Initializable {
             curationDetails.distributionAmount) / curationDetails.targetAmount;
         stakedAmounts[msg.sender] = 0;
         curationDetails.newToken.safeTransfer(msg.sender, amount);
+        emit Claim(msg.sender, amount);
     }
 
     /**

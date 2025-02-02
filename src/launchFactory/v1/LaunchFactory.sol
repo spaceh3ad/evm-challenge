@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import "../../lib/Structs.sol";
 import "../../lib/Errors.sol";
 import "../../lib/Events.sol";
+import {Curation} from "../../curation/v1/Curation.sol";
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
@@ -108,5 +109,34 @@ contract LaunchFactory is Initializable, OwnableUpgradeable {
     ) external onlyOwner {
         curationImplementation = _newImplementation;
         emit ImplementationUpgraded(_newImplementation);
+    }
+
+    /**
+     * @notice Retrieves detailed information for all curation submissions.
+     * @dev Iterates through the stored curation addresses and collects their corresponding details and status.
+     * @return An array of FullCurationInfo structs, each containing the curation contract address, its details, and current status.
+     */
+    function getCurationsData()
+        external
+        view
+        returns (FullCurationInfo[] memory)
+    {
+        FullCurationInfo[] memory curationInfo = new FullCurationInfo[](
+            curations.length
+        );
+
+        for (uint256 i = 0; i < curations.length; i++) {
+            address _curation = curations[i];
+
+            CurationDetails memory details = Curation(_curation)
+                .getCurationDetails();
+
+            curationInfo[i] = FullCurationInfo({
+                curationAddress: _curation,
+                curationDetails: details,
+                curationStatus: Curation(_curation).curationStatus()
+            });
+        }
+        return curationInfo;
     }
 }

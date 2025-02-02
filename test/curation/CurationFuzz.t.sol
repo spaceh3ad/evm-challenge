@@ -65,7 +65,7 @@ contract CurationFuzzTest is Fixture {
         uint256 stakeAmount,
         uint256 unstakeAmount
     ) public {
-        stakeAmount = bound(stakeAmount, 1, TARGET_AMOUNT - 1); // check values lower then TARGET
+        stakeAmount = bound(stakeAmount, 1, TARGET_AMOUNT - 1);
         unstakeAmount = bound(unstakeAmount, 1, stakeAmount);
         stake(bob, address(curationInstance), stakeAmount);
         uint256 stakedBefore = curationInstance.stakedAmounts(bob);

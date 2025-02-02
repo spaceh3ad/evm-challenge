@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./Fixture.sol";
+import "../Fixture.sol";
 
 contract LaunchFactoryTest is Fixture {
     function setUp() public override {

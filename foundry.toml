@@ -8,6 +8,10 @@ ffi = true
 build_info = true
 extra_output = ["storageLayout"]
 
+[rpc_endpoints]
+# testnets
+baseSepolia = "https://sepolia.base.org"
+
 [invariant]
 runs = 8
 depth = 64
